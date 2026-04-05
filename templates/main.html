@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Recommendations</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .navbar {
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .navbar-brand {
+        font-weight: 700;
+        font-size: 1.5rem;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-right: auto;
+    }
+
+    .navbar-nav {
+        margin-left: auto;
+    }
+
+    @media (max-width: 991.98px) {
+        .navbar-brand {
+            margin: 0 auto;
+        }
+        .navbar-nav {
+            margin: 1rem 0;
+            text-align: center;
+        }
+    }
+
+    .nav-link {
+        font-weight: 500;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .nav-link:hover {
+        color: #667eea !important;
+        transform: translateY(-2px);
+    }
+
+    .nav-link.btn {
+        border-radius: 25px;
+        margin: 0 5px;
+        transition: all 0.3s ease;
+    }
+
+    .nav-link.btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-container {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin: 50px 0;
+    }
+
+    .form-control {
+        border-radius: 25px;
+        border: 2px solid #e9ecef;
+        padding: 12px 20px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        transform: scale(1.02);
+    }
+
+    .btn-primary {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        border: none;
+        border-radius: 25px;
+        padding: 12px 30px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        background: linear-gradient(45deg, #5a6fd8, #6a4190);
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 50px;
+        color: #333;
+    }
+
+    .card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+        background: white;
+        margin-bottom: 30px;
+    }
+
+    .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-img-top {
+        height: 200px;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+
+    .card-body {
+        padding: 25px;
+    }
+
+    .card-title {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .card-text {
+        color: #666;
+        margin-bottom: 10px;
+    }
+
+    .rating {
+        color: #ffd700;
+        margin-bottom: 10px;
+    }
+
+    .price {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 15px;
+    }
+
+    .modal-content {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #eee;
+        padding: 25px;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .modal-body {
+        padding: 25px;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #eee;
+        padding: 25px;
+    }
+
+    .footer {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 50px 0 20px;
+        margin-top: 100px;
+    }
+
+    .footer h5 {
+        color: #fff;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+
+    .footer a {
+        color: #bdc3c7;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .footer a:hover {
+        color: #667eea;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in {
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        margin: 50px 0;
+    }
+
+    .spinner-border {
+        color: #667eea;
+    }
+
+    /* Gaze tracking styles */
+    #gaze-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 9998;
+    }
+
+    .gaze-dot {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: radial-gradient(circle, #FF0000, #FF4444);
+        border-radius: 50%;
+        box-shadow: 0 0 8px rgba(255, 0, 0, 0.6), inset -1px -1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .product-hover {
+        position: relative;
+    }
+
+    .product-hover.gaze-interest {
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.8) !important;
+        border: 3px solid #FFD700 !important;
+    }
+
+    .interest-timer {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background: #FFD700;
+        color: black;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 12px;
+        z-index: 10;
+    }
+
+    #interested-products-panel {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 300px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    max-height: 400px;
+    overflow-y: auto;
+    cursor: move;
+    user-select: none;
+}
+
+    .interested-product-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 8px;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+
+    .interested-product-item img {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        margin-right: 10px;
+        border-radius: 3px;
+    }
+
+    .gaze-toggle {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 10000;
+    }
+
+  
+
+    
+</style>
+<body>
+
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <a class="navbar-brand" href="#">Ecommerce Recommendation System</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="index"><i class="fas fa-home"></i> Home</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link btn btn-outline-primary mr-2" href="#" data-toggle="modal" data-target="#signupModal">Sign Up</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link btn btn-primary" href="#" data-toggle="modal" data-target="#signinModal">Sign In</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+
+<!-- Search Bar -->
+<div class="container">
+    <div class="search-container fade-in">
+        <h2 class="text-center mb-4" style="color: #333; font-weight: 700;">Find Your Perfect Product</h2>
+        <p class="text-center mb-4" style="color: #666;">Enter a product name and get AI-powered recommendations</p>
+        <form action="/recommendations" method="post" class="d-flex flex-column flex-md-row align-items-center justify-content-center">
+            <div class="d-flex flex-column flex-md-row w-100" style="max-width: 600px;">
+                <input type="text" class="form-control mb-3 mb-md-0 mr-md-3" name="prod" placeholder="e.g., lipstick, nail polish, shampoo..." required>
+                <input type="number" class="form-control mb-3 mb-md-0 mr-md-3" name="nbr" placeholder="Number of recommendations" min="1" value="5" style="max-width: 200px;">
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-search mr-2"></i>Get Recommendations
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Gaze Tracking Overlay -->
+<div id="gaze-overlay" style="display: none;">
+  <div class="gaze-dot" id="gaze-dot"></div>
+</div>
+
+<!-- Camera Preview Panel -->
+<div id="camera-panel" style="display: none; position: fixed; top: 10px; left: 10px; z-index: 9999; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 10px;">
+  <video id="webcam-preview" autoplay muted style="width: 200px; height: 150px; border-radius: 5px; transform: scaleX(-1);"></video>
+  <div style="color: white; font-size: 12px; margin-top: 5px;">Camera Preview</div>
+</div>
+
+<!-- Interested Products Panel -->
+<div id="interested-products-panel" style="display: none;">
+  <h5><i class="fas fa-eye mr-2"></i>Interested Products</h5>
+  <div id="interested-products-list"></div>
+  <div class="mt-2 d-flex justify-content-between">
+    <button class="btn btn-sm btn-outline-primary" onclick="goToHome()">
+      <i class="fas fa-home mr-1"></i>Home
+    </button>
+    <button class="btn btn-sm btn-outline-danger" onclick="clearInterestedProducts()">
+      <i class="fas fa-trash mr-1"></i>Clear All
+    </button>
+  </div>
+</div>
+
+<!-- Gaze Toggle Button -->
+<div class="gaze-toggle">
+  <button class="btn btn-primary" id="gaze-toggle-btn" onclick="toggleGazeTracking()" type="button">
+    <i class="fas fa-eye"></i> Enable Eye Tracking
+  </button>
+  <button class="btn btn-secondary ml-2" id="test-gaze-btn" onclick="testGazeDot()" type="button" style="display: none;">
+    <i class="fas fa-crosshairs"></i> Test Dot
+  </button>
+  <div id="gaze-instructions" class="mt-2" style="display: none; font-size: 12px; color: #666; max-width: 200px;">
+    <i class="fas fa-info-circle"></i> Look at products for 4+ seconds to add them to your interests!
+  </div>
+</div>
+
+{% if message %}
+<div class="container">
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle mr-2"></i>{{ message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+</div>
+{% endif %}
+
+<!--trending recommendations-->
+<!--'Name', 'ReviewCount', 'Brand', 'ImageURL', 'Rating'-->
+<!-- Products -->
+{% if not content_based_rec.empty %}
+<div class="container mt-5">
+  <h2 class="section-title fade-in">Your Personalized Recommendations</h2>
+  <div class="row mt-4">
+    {% for index, product in content_based_rec.iterrows() %}
+    <div class="col-lg-4 col-md-6 mb-4 fade-in">
+      <div class="card h-100">
+          <img src="{{ product['ImageURL'].split('|')[0] }}" class="card-img-top" alt="{{ product['Name'] }}" style="height: 200px;">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">{{ truncate(product['Name'],15) }}</h5>
+          <p class="card-text">Brand: {{ product['Brand'] }}</p>
+          <div class="rating mb-2">
+            {% for i in range(5) %}
+              {% if i < product['Rating']|int %}
+                <i class="fas fa-star"></i>
+              {% else %}
+                <i class="far fa-star"></i>
+              {% endif %}
+            {% endfor %}
+            <span class="ml-1">{{ product['Rating'] }}</span>
+          </div>
+          <p class="card-text"><i class="fas fa-comments mr-1"></i>{{ product['ReviewCount'] }} reviews</p>
+          <p class="price mb-3">${{ random_price }}</p>
+          <button type="button" class="btn btn-primary mt-auto" data-toggle="modal" data-target="#productModal{{ index }}">
+            <i class="fas fa-eye mr-2"></i>View Details
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="productModal{{ index }}" tabindex="-1" role="dialog" aria-labelledby="productModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="productModalLabel">{{ product['Name'] }}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-5">
+                  <img src="{{ product['ImageURL'].split('|')[0] }}" class="img-fluid rounded" alt="{{ product['Name'] }}" style="height: 250px; object-fit: cover;">
+              </div>
+              <div class="col-md-7">
+                <h4 class="mb-3">{{ product['Name'] }}</h4>
+                <p class="mb-2"><strong>Brand:</strong> {{ product['Brand'] }}</p>
+                <div class="rating mb-3">
+                  {% for i in range(5) %}
+                    {% if i < product['Rating']|int %}
+                      <i class="fas fa-star"></i>
+                    {% else %}
+                      <i class="far fa-star"></i>
+                    {% endif %}
+                  {% endfor %}
+                  <span class="ml-2">{{ product['Rating'] }} / 5</span>
+                </div>
+                <p class="mb-2"><strong>Review Count:</strong> {{ product['ReviewCount'] }}</p>
+                <p class="price mb-3"><strong>Price:</strong> ${{ random_price }}</p>
+                <p class="text-muted">This recommended product is based on your search preferences and similar user behavior patterns.</p>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+              <i class="fas fa-times mr-2"></i>Close
+            </button>
+            <button type="button" class="btn btn-primary">
+              <i class="fas fa-shopping-cart mr-2"></i>Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endif %}
+
+
+<!-- Bootstrap modal for sign up -->
+<div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="signupModalLabel">
+          <i class="fas fa-user-plus mr-2"></i>Join Our Community
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="/signup" method="post">
+          <div class="mb-3">
+            <label for="username" class="form-label">
+              <i class="fas fa-user mr-2"></i>Username
+            </label>
+            <input type="text" class="form-control" id="username" name="username" required placeholder="Enter your username">
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">
+              <i class="fas fa-envelope mr-2"></i>Email
+            </label>
+            <input type="email" class="form-control" id="email" name="email" required placeholder="Enter your email">
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">
+              <i class="fas fa-lock mr-2"></i>Password
+            </label>
+            <input type="password" class="form-control" id="password" name="password" required placeholder="Create a password">
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="fas fa-user-plus mr-2"></i>Sign Up
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap modal for sign in -->
+<div class="modal fade" id="signinModal" tabindex="-1" aria-labelledby="signinModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="signinModalLabel">
+          <i class="fas fa-sign-in-alt mr-2"></i>Welcome Back
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="/signin" method="post">
+          <div class="mb-3">
+            <label for="signinUsername" class="form-label">
+              <i class="fas fa-user mr-2"></i>Username
+            </label>
+            <input type="text" class="form-control" id="signinUsername" name="signinUsername" required placeholder="Enter your username">
+          </div>
+          <div class="mb-3">
+            <label for="signinPassword" class="form-label">
+              <i class="fas fa-lock mr-2"></i>Password
+            </label>
+            <input type="password" class="form-control" id="signinPassword" name="signinPassword" required placeholder="Enter your password">
+          </div>
+          <button type="submit" class="btn btn-success w-100">
+            <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="settingsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title" id="settingsModalLabel">
+          <i class="fas fa-cog mr-2"></i>Settings
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <h5><i class="fas fa-palette mr-2"></i>Choose Theme:</h5>
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="radio" name="theme" id="defaultTheme" value="default" checked>
+          <label class="form-check-label" for="defaultTheme">
+            <i class="fas fa-sun mr-2"></i>Light Theme
+          </label>
+        </div>
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="radio" name="theme" id="blackTheme" value="black">
+          <label class="form-check-label" for="blackTheme">
+            <i class="fas fa-moon mr-2"></i>Dark Theme
+          </label>
+        </div>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="radio" name="theme" id="greenTheme" value="green">
+          <label class="form-check-label" for="greenTheme">
+            <i class="fas fa-leaf mr-2"></i>Green Theme
+          </label>
+        </div>
+        <hr>
+        <h5><i class="fas fa-search-plus mr-2"></i>Zoom:</h5>
+        <div class="d-flex justify-content-center">
+          <button type="button" class="btn btn-outline-primary mr-2" id="zoomOut">
+            <i class="fas fa-search-minus"></i>
+          </button>
+          <button type="button" class="btn btn-outline-primary" id="zoomIn">
+            <i class="fas fa-search-plus"></i>
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+          <i class="fas fa-times mr-2"></i>Close
+        </button>
+        <button type="button" class="btn btn-info" id="applyTheme">
+          <i class="fas fa-check mr-2"></i>Apply
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+  // ===== GLOBAL VARIABLES - DECLARE FIRST =====
+  let gazeTrackingEnabled = false;
+  let interestedProducts = [];
+  let currentGazeTarget = null;
+  let gazeTimer = null;
+  let gazeStartTime = 0;
+  let cameraStream = null; // Store camera stream globally
+
+  // Handle click on Settings link to open the modal
+  const settingsLink = document.getElementById('settingsLink');
+if (settingsLink) {
+  settingsLink.addEventListener('click', function() {
+    $('#settingsModal').modal('show');
+  });
+}
+
+  // Handle theme apply button click
+  document.getElementById('applyTheme').addEventListener('click', function() {
+    // Get the selected theme value
+    var selectedTheme = document.querySelector('input[name="theme"]:checked').value;
+
+    // Apply the selected theme with smooth transition
+    if (selectedTheme === 'black') {
+      document.body.style.transition = 'background-color 0.5s ease, color 0.5s ease';
+      document.body.style.backgroundColor = 'black';
+      document.body.style.color = 'white';
+    } else if (selectedTheme === 'green') {
+      document.body.style.transition = 'background-color 0.5s ease, color 0.5s ease';
+      document.body.style.backgroundColor = 'green';
+      document.body.style.color = 'white';
+    } else {
+      // Default theme
+      document.body.style.transition = 'background-color 0.5s ease, color 0.5s ease';
+      document.body.style.backgroundColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+      document.body.style.color = 'black';
+    }
+
+    // Close the modal
+    $('#settingsModal').modal('hide');
+  });
+
+  // Handle zoom buttons
+  document.getElementById('zoomIn').addEventListener('click', function() {
+    document.body.style.transition = 'zoom 0.3s ease';
+    document.body.style.zoom = "115%";
+  });
+
+  document.getElementById('zoomOut').addEventListener('click', function() {
+    document.body.style.transition = 'zoom 0.3s ease';
+    document.body.style.zoom = "100%";
+  });
+
+  // Add loading animation for cards
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, observerOptions);
+
+  // Observe all cards for animation
+  document.querySelectorAll('.card').forEach(card => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(30px)';
+    card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(card);
+  });
+
+  // Add hover effect for navbar links
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('mouseenter', function() {
+      this.style.transform = 'scale(1.05)';
+    });
+    link.addEventListener('mouseleave', function() {
+      this.style.transform = 'scale(1)';
+    });
+  });
+
+  // Add search form enhancement
+  const searchForm = document.querySelector('form[action="/recommendations"]');
+  if (searchForm) {
+    searchForm.addEventListener('submit', function(e) {
+      // Add interested products to form data
+      const interestedInput = document.createElement('input');
+      interestedInput.type = 'hidden';
+      interestedInput.name = 'interested_products';
+      interestedInput.value = JSON.stringify(interestedProducts);
+      this.appendChild(interestedInput);
+
+      // Show loading state
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Searching...';
+      submitBtn.disabled = true;
+
+      // Re-enable after a short delay (in case of client-side validation)
+      setTimeout(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+      }, 2000);
+    });
+  }
+
+  // Load interested products from localStorage on page load
+  function loadInterestedProducts() {
+    const saved = localStorage.getItem('interestedProducts');
+    if (saved) {
+      interestedProducts = JSON.parse(saved);
+      updateInterestedProductsUI();
+    }
+  }
+
+  // Save interested products to localStorage
+  function saveInterestedProducts() {
+    localStorage.setItem('interestedProducts', JSON.stringify(interestedProducts));
+    // Reset synced flag since products changed
+    localStorage.removeItem('interestedSynced');
+  }
+
+  // Make interested products panel draggable
+  let isDragging = false;
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const panel = document.getElementById('interested-products-panel');
+    if (panel) {
+      panel.addEventListener('mousedown', startDrag);
+      document.addEventListener('mousemove', drag);
+      document.addEventListener('mouseup', endDrag);
+    }
+    loadInterestedProducts(); // Load on page load
+  });
+
+  function startDrag(e) {
+    isDragging = true;
+    const panel = document.getElementById('interested-products-panel');
+    dragOffsetX = e.clientX - panel.offsetLeft;
+    dragOffsetY = e.clientY - panel.offsetTop;
+  }
+
+  function drag(e) {
+    if (!isDragging) return;
+    const panel = document.getElementById('interested-products-panel');
+    panel.style.left = (e.clientX - dragOffsetX) + 'px';
+    panel.style.top = (e.clientY - dragOffsetY) + 'px';
+  }
+
+  function endDrag() {
+    isDragging = false;
+  }
+
+  // Toggle gaze tracking
+  function toggleGazeTracking() {
+    console.log('toggleGazeTracking called, gazeTrackingEnabled:', gazeTrackingEnabled);
+
+    const btn = document.getElementById('gaze-toggle-btn');
+    const overlay = document.getElementById('gaze-overlay');
+    const panel = document.getElementById('interested-products-panel');
+    const cameraPanel = document.getElementById('camera-panel');
+    const instructions = document.getElementById('gaze-instructions');
+
+    if (!btn) {
+      console.error('Button element not found');
+      return;
+    }
+
+    if (!gazeTrackingEnabled) {
+      // Request camera permission and start tracking
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(function(stream) {
+            console.log('Camera permission granted');
+            cameraStream = stream;
+
+            // Set up video element
+            const videoElement = document.getElementById('webcam-preview');
+            if (videoElement) {
+              videoElement.srcObject = stream;
+              console.log('Video element set up');
+
+              // Wait for video to be ready, then initialize MediaPipe
+              videoElement.onloadedmetadata = function() {
+                console.log('Video metadata loaded, initializing MediaPipe...');
+                setTimeout(async function() {
+                  const success = await initMediaPipeEyeTracking();
+                  if (success) {
+                    // Start the camera
+                    if (camera) {
+                      camera.start();
+                      console.log('Camera started');
+                    }
+
+                    gazeTrackingEnabled = true;
+                    if (overlay) overlay.style.display = 'block';
+                    if (panel) panel.style.display = 'block';
+                    if (cameraPanel) cameraPanel.style.display = 'block';
+                    if (instructions) instructions.style.display = 'block';
+                    document.getElementById('test-gaze-btn').style.display = 'inline-block';
+                    btn.innerHTML = '<i class="fas fa-eye-slash"></i> Disable Eye Tracking';
+                    btn.className = 'btn btn-danger';
+                    showNotification('✅ Eye tracking enabled! Look at products for 4+ seconds.', 'success');
+                    console.log('Eye tracking enabled successfully');
+                  } else {
+                    showNotification('⚠️ Failed to initialize eye tracking. Check console for errors.', 'warning');
+                  }
+                }, 1000); // Give time for libraries to load
+              };
+            } else {
+              console.error('Video element not found');
+              showNotification('⚠️ Camera preview element not found.', 'warning');
+            }
+          })
+          .catch(function(err) {
+            console.error('Camera access error:', err);
+            showNotification('⚠️ Camera access denied. Please allow camera to use eye tracking.', 'warning');
+          });
+      } else {
+        console.error('getUserMedia not supported');
+        showNotification('⚠️ Your browser doesn\'t support camera access.', 'warning');
+      }
+    } else {
+      // Stop tracking
+      console.log('Stopping eye tracking...');
+      try {
+        // Stop MediaPipe camera and face mesh
+        if (camera) {
+          camera.stop();
+          camera = null;
+        }
+        if (faceMesh) {
+          faceMesh.close();
+          faceMesh = null;
+        }
+      } catch (e) {
+        console.warn('Error stopping MediaPipe tracking:', e);
+      }
+
+      // Stop camera stream
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+        console.log('Camera stream stopped');
+      }
+
+      // Hide video element
+      const videoElement = document.getElementById('webcam-preview');
+      if (videoElement) {
+        videoElement.srcObject = null;
+      }
+
+      gazeTrackingEnabled = false;
+      if (overlay) overlay.style.display = 'none';
+      if (panel) panel.style.display = 'none';
+      if (cameraPanel) cameraPanel.style.display = 'none';
+      if (instructions) instructions.style.display = 'none';
+      document.getElementById('test-gaze-btn').style.display = 'none';
+      btn.innerHTML = '<i class="fas fa-eye"></i> Enable Eye Tracking';
+      btn.className = 'btn btn-primary';
+
+      // Clear any active timers
+      if (gazeTimer) {
+        clearInterval(gazeTimer);
+        gazeTimer = null;
+      }
+      if (currentGazeTarget) {
+        currentGazeTarget.classList.remove('gaze-interest');
+        const timerEl = currentGazeTarget.querySelector('.interest-timer');
+        if (timerEl) timerEl.remove();
+        currentGazeTarget = null;
+      }
+      showNotification('Eye tracking disabled.', 'info');
+      console.log('Eye tracking disabled');
+    }
+  }
+
+  // Check if gaze is on a product
+  function checkGazeOnProduct(x, y) {
+    if (!gazeTrackingEnabled) return;
+
+    const products = document.querySelectorAll('.card');
+    let foundProduct = null;
+    let closestDistance = Infinity;
+
+    products.forEach(product => {
+      const rect = product.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      // Calculate distance from gaze point to product center
+      const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+
+      // Check if gaze is within product bounds with some tolerance
+      if (x >= rect.left - 20 && x <= rect.right + 20 &&
+          y >= rect.top - 20 && y <= rect.bottom + 20 &&
+          distance < closestDistance) {
+        foundProduct = product;
+        closestDistance = distance;
+      }
+    });
+
+    // Debug logging
+    if (foundProduct) {
+      console.log('Gaze on product:', foundProduct.querySelector('.card-title').textContent.trim());
+    }
+
+    if (foundProduct !== currentGazeTarget) {
+      // Gaze moved away from current target
+      if (currentGazeTarget) {
+        console.log('Left product:', currentGazeTarget.querySelector('.card-title').textContent.trim());
+        currentGazeTarget.classList.remove('gaze-interest');
+        const timerEl = currentGazeTarget.querySelector('.interest-timer');
+        if (timerEl) timerEl.remove();
+        if (gazeTimer) {
+          clearInterval(gazeTimer);
+          gazeTimer = null;
+        }
+      }
+
+      // Start tracking new target
+      if (foundProduct) {
+        console.log('Now tracking product:', foundProduct.querySelector('.card-title').textContent.trim());
+        currentGazeTarget = foundProduct;
+        currentGazeTarget.classList.add('gaze-interest');
+        gazeStartTime = Date.now();
+
+        // Add timer element
+        const timerEl = document.createElement('div');
+        timerEl.className = 'interest-timer';
+        timerEl.textContent = '4';
+        currentGazeTarget.style.position = 'relative';
+        currentGazeTarget.appendChild(timerEl);
+
+        // Start countdown timer
+        let timeLeft = 4;
+        gazeTimer = setInterval(() => {
+          timeLeft--;
+          timerEl.textContent = timeLeft;
+
+          if (timeLeft <= 0) {
+            // Add to interested products
+            addToInterestedProducts(currentGazeTarget);
+            clearInterval(gazeTimer);
+            gazeTimer = null;
+            currentGazeTarget.classList.remove('gaze-interest');
+            if (timerEl.parentNode) timerEl.remove();
+            currentGazeTarget = null;
+          }
+        }, 1000);
+      } else {
+        currentGazeTarget = null;
+      }
+    }
+  }
+
+  // Add product to interested products
+  function addToInterestedProducts(productElement) {
+    const productName = productElement.querySelector('.card-title').textContent.trim();
+    const productImage = productElement.querySelector('.card-img-top').src;
+    const productBrand = productElement.querySelector('.card-text').textContent.replace('Brand: ', '').trim();
+
+    // Check if already in interested products
+    const exists = interestedProducts.some(p => p.name === productName);
+    if (exists) return;
+
+    const product = {
+      name: productName,
+      image: productImage,
+      brand: productBrand,
+      addedTime: new Date().toLocaleTimeString()
+    };
+
+    interestedProducts.push(product);
+    updateInterestedProductsUI();
+    saveInterestedProducts();
+
+    // Show success notification
+    showNotification(`Added "${productName}" to interested products!`, 'success');
+  }
+
+  // Update interested products UI
+  function updateInterestedProductsUI() {
+    const listEl = document.getElementById('interested-products-list');
+    listEl.innerHTML = '';
+
+    interestedProducts.forEach((product, index) => {
+      const itemEl = document.createElement('div');
+      itemEl.className = 'interested-product-item';
+      itemEl.innerHTML = `
+        <img src="${product.image}" alt="${product.name}">
+        <div>
+          <strong>${product.name}</strong><br>
+          <small class="text-muted">${product.brand}</small>
+        </div>
+        <button class="btn btn-sm btn-outline-danger ml-auto" onclick="removeFromInterested(${index})">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+      listEl.appendChild(itemEl);
+    });
+  }
+
+  // Remove from interested products
+  function removeFromInterested(index) {
+    interestedProducts.splice(index, 1);
+    updateInterestedProductsUI();
+    saveInterestedProducts();
+  }
+
+  // Clear all interested products
+  function clearInterestedProducts() {
+    interestedProducts = [];
+    updateInterestedProductsUI();
+    saveInterestedProducts();
+    // Clear synced flag to ensure session is updated
+    localStorage.removeItem('interestedSynced');
+    showNotification('Cleared all interested products!', 'info');
+  }
+
+  // Go to home page
+  function goToHome() {
+    window.location.href = '/';
+  }
+
+  // Show notification
+  function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} position-fixed`;
+    notification.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 10001; min-width: 300px; text-align: center;';
+    notification.innerHTML = `
+      <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} mr-2"></i>
+      ${message}
+    `;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
+  }
+
+  // MediaPipe-based eye tracking
+  let faceMesh = null;
+  let camera = null;
+
+  async function initMediaPipeEyeTracking() {
+    try {
+      console.log('Initializing MediaPipe Face Mesh for eye tracking...');
+
+      // Create face mesh instance
+      faceMesh = new FaceMesh({
+        locateFile: (file) => {
+          return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+        }
+      });
+
+      faceMesh.setOptions({
+        maxNumFaces: 1,
+        refineLandmarks: true,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+      });
+
+      // Set up results handler
+      faceMesh.onResults(onFaceMeshResults);
+
+      // Initialize camera
+      camera = new Camera(document.getElementById('webcam-preview'), {
+        onFrame: async () => {
+          if (faceMesh && gazeTrackingEnabled) {
+            await faceMesh.send({image: document.getElementById('webcam-preview')});
+          }
+        },
+        width: 640,
+        height: 480
+      });
+
+      console.log('MediaPipe Face Mesh initialized successfully');
+      return true;
+
+    } catch (err) {
+      console.error('MediaPipe initialization error:', err);
+      return false;
+    }
+  }
+
+  function onFaceMeshResults(results) {
+    if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
+      console.log('No face detected');
+      return;
+    }
+
+    const landmarks = results.multiFaceLandmarks[0];
+
+    // Get key facial landmarks for gaze estimation
+    const leftEyeOuter = landmarks[33];   // Left eye outer corner
+    const leftEyeInner = landmarks[133];  // Left eye inner corner
+    const rightEyeOuter = landmarks[362]; // Right eye outer corner
+    const rightEyeInner = landmarks[263]; // Right eye inner corner
+    const noseTip = landmarks[1];         // Nose tip
+
+    // Calculate eye centers
+    const leftEyeCenter = {
+      x: (leftEyeOuter.x + leftEyeInner.x) / 2,
+      y: (leftEyeOuter.y + leftEyeInner.y) / 2
+    };
+    const rightEyeCenter = {
+      x: (rightEyeOuter.x + rightEyeInner.x) / 2,
+      y: (rightEyeOuter.y + rightEyeInner.y) / 2
+    };
+
+    // Estimate gaze direction based on face orientation
+    const faceCenterX = (leftEyeCenter.x + rightEyeCenter.x) / 2;
+    const faceCenterY = (leftEyeCenter.y + rightEyeCenter.y) / 2;
+
+    // Convert normalized coordinates to screen coordinates
+    const screenX = faceCenterX * window.innerWidth;
+    const screenY = faceCenterY * window.innerHeight;
+
+    // Add some dynamic offset based on head position
+    const headTiltX = (noseTip.x - faceCenterX) * window.innerWidth;
+    const headTiltY = (noseTip.y - faceCenterY) * window.innerHeight;
+
+    const gazeX = window.innerWidth - (screenX + headTiltX * 3); // Mirror X coordinate for mirrored camera
+    const gazeY = screenY + headTiltY * 3;
+
+    console.log('Face center:', screenX, screenY, 'Gaze estimate:', gazeX, gazeY);
+
+    // Update gaze dot
+    const gazeDot = document.getElementById('gaze-dot');
+    if (gazeDot) {
+      gazeDot.style.left = Math.max(0, Math.min(window.innerWidth - 10, gazeX)) + 'px';
+      gazeDot.style.top = Math.max(0, Math.min(window.innerHeight - 10, gazeY)) + 'px';
+      gazeDot.style.display = 'block';
+    }
+
+    // Check if gaze is on a product
+    checkGazeOnProduct(gazeX, gazeY);
+  }
+
+  // Make functions globally available
+  window.toggleGazeTracking = toggleGazeTracking;
+  window.clearInterestedProducts = clearInterestedProducts;
+  window.removeFromInterested = removeFromInterested;
+  window.testGazeDot = testGazeDot;
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    loadInterestedProducts();
+
+    // If there are interested products passed from the backend, display them
+    {% if interested_products %}
+    interestedProducts = {{ interested_products|tojson }};
+    updateInterestedProductsUI();
+    {% endif %}
+
+    // Load previously tracked interested products but don't auto-enable
+    // User must click Enable Eye Tracking button
+  });
+</script>
+
+
+<!--footer-->
+<footer class="footer bg-dark text-white" style="margin-top:300px;">
+    <div class="container" style="padding-top:20px;">
+        <div class="row">
+            <div class="col-md-3 col-sm-6">
+                <h5>About Us</h5>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <h5>Quick Links</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Services</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <h5>Support</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <h5>Contact Us</h5>
+                <address>
+                    <strong>Company Name</strong><br>
+                    123 Street, City<br>
+                    Country<br>
+                    <i class="fas fa-phone"></i> Phone: +1234567890<br>
+                    <i class="fas fa-envelope"></i> Email: info@example.com
+                </address>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <hr class="bg-light">
+                <p class="text-center">© 2026 Ecommerce Recommendation System. All Rights Reserved.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

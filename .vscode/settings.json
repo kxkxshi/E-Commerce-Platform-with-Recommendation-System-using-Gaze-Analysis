@@ -1,0 +1,9 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd \"d:\\\\Project\\\\E-Commerece-Recommendation-System-Machine-Learning-Product-Recommendation-system--main - Copy\" ; python app\\.py$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "pip": true
+    }
+}
