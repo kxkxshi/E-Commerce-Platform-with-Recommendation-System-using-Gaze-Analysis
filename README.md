@@ -104,7 +104,11 @@ User → Frontend UI → Gaze Tracking (WebGazer.js)
    venv\scriptc\activate
    ```
 
-4. Run using Live Server (VS Code)
+4. Run
+   
+   ```bash
+   python app.py
+   ```
 
 ---
 
