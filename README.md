@@ -80,7 +80,7 @@ User → Frontend UI → Gaze Tracking (WebGazer.js)
 
 ## 📸 Demo 
 
-> Add screenshots or screen recordings here to showcase UI and functionality
+> SS
 
 ---
 
