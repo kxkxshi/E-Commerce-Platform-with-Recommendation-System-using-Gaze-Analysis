@@ -94,7 +94,11 @@ User → Frontend UI → Gaze Tracking (WebGazer.js)
 
 2. Create a venv using pip
 
-3. Run using Live Server (VS Code)
+    ```bash
+   python -m venv venv
+   ```
+
+4. Run using Live Server (VS Code)
 
 ---
 
