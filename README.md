@@ -92,7 +92,7 @@ User → Frontend UI → Gaze Tracking (WebGazer.js)
    git clone https://github.com/kxkxshi/E-Commerce-Platform-with-Recommendation-System-using-Gaze-Analysis.git
    ```
 
-2. Open the project folder
+2. Create a venv using pip
 
 3. Run using Live Server (VS Code)
 
