@@ -11,7 +11,7 @@ Instead of relying only on clicks and purchases, the system tracks user attentio
 
 Traditional recommendation systems rely on:
 
-* Clicks
+* Clicks 
 * Purchase history
 
 This project introduces:
