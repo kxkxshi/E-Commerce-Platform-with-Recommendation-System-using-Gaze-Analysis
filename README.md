@@ -98,6 +98,12 @@ User → Frontend UI → Gaze Tracking (WebGazer.js)
    python -m venv venv
    ```
 
+3. Activate the virtual environment
+
+    ```bash
+   venv\scriptc\activate
+   ```
+
 4. Run using Live Server (VS Code)
 
 ---
